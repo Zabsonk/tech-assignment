@@ -5,7 +5,7 @@ import GameApplication, { type GameApplicationConfig } from './GameApplication';
 import SlotMachine, { StateChanged } from '../SlotMachine';
 import ReelModel from '../model/ReelModel';
 import SymbolsFactory from '../factories/SymbolsFactory';
-import DummyGameService from '../service/GameService';
+import DummyGameService, { GameMode } from '../service/GameService';
 import { State } from '../States';
 
 export default class Game extends GameApplication {
@@ -41,6 +41,12 @@ export default class Game extends GameApplication {
         this.mainScreen.stage.addChild(scene);
 
         this._slotMachine.currentState = State.Idle;
+
+        document.querySelectorAll<HTMLInputElement>('input[name="gm"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                this._gameService.setMode(radio.value as GameMode);
+            });
+        });
     }
 
     private _onSpinButtonClicked(): void {

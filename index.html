@@ -4,8 +4,37 @@
     <meta charset="UTF-8">
     <title>Nailed It! Games Assignment</title>
     <script type="module" src="index.ts"></script>
+    <style>
+        #debug-panel {
+            position: fixed;
+            top: 12px;
+            left: 12px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font: 14px/1.6 sans-serif;
+            user-select: none;
+            z-index: 1000;
+        }
+        #debug-panel legend {
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        #debug-panel label {
+            display: block;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-        <div id="app"></div>
+    <div id="app"></div>
+
+    <fieldset id="debug-panel">
+        <legend>Game mode</legend>
+        <label><input type="radio" name="gm" value="forced1" checked> Forced 1 (win 100)</label>
+        <label><input type="radio" name="gm" value="forced2"> Forced 2 (win 200)</label>
+        <label><input type="radio" name="gm" value="random"> Random</label>
+    </fieldset>
 </body>
 </html>

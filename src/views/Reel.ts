@@ -4,7 +4,6 @@ import SymbolsPool from '../SymbolsPool';
 import GridSymbol from './GridSymbol';
 
 const SPIN_SPEED = 30;
-const MINIMUM_SPIN_TIME = 2000; // ms — reel spins at least this long before stopping
 
 export interface ReelConfig {
     pool: SymbolsPool;
@@ -14,11 +13,13 @@ export interface ReelConfig {
     symbolWidht: number;
     padding: number;
     ticker: Ticker;
+    minSpinTime: number;
 }
 
 export default class Reel extends Container {
     private _strip: Container;
     private _slots: Array<{ symbol: GridSymbol; type: Symbols }> = [];
+    private _MIN_SPIN_TIME: number;
 
     private _pool: SymbolsPool;
     private _definition: Symbols[];
@@ -44,7 +45,10 @@ export default class Reel extends Container {
 
     constructor(config: ReelConfig) {
         super();
-        const { pool, definition, rows, symbolHeight, symbolWidht, padding, ticker } = config;
+        const { pool, definition, rows, symbolHeight, symbolWidht, padding, ticker, minSpinTime } =
+            config;
+
+        this._MIN_SPIN_TIME = minSpinTime;
         this._ticker = ticker;
         this._pool = pool;
         this._definition = definition;
@@ -109,15 +113,13 @@ export default class Reel extends Container {
     }
 
     private _startDecel(symbols: Symbols[]): void {
-        // Reversed so that after rows+1 advances they land: S1@row0, S2@row1, ...
         this._stopQueue = [...symbols].reverse();
         this._stopQueueIdx = 0;
         this._stopAdvances = 0;
         this._stopping = true;
         this._stopTimer = 0;
-        // Distance to scroll so scrollY=0 after exactly rows+1 advances
+
         const stopDistance = (this._rows + 1) * this._symbolHeight - this._scrollY;
-        // With sqrt easing: total_distance = (2/3) * SPIN_SPEED * decelTicks
         this._decelTicks = (3 * stopDistance) / (2 * SPIN_SPEED);
     }
 
@@ -127,7 +129,7 @@ export default class Reel extends Container {
         const dt = ticker.deltaTime;
 
         if (!this._stopping && this._pendingStopSymbols) {
-            if (Date.now() - this._spinStartTime >= MINIMUM_SPIN_TIME) {
+            if (Date.now() - this._spinStartTime >= this._MIN_SPIN_TIME) {
                 this._startDecel(this._pendingStopSymbols);
                 this._pendingStopSymbols = null;
             }
@@ -181,7 +183,6 @@ export default class Reel extends Container {
     }
 
     private _snap(): void {
-        // Natural decel may fall just short of the final advance — complete it if needed
         while (this._stopAdvances < this._rows + 1) {
             this._advance();
         }

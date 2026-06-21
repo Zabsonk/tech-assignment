@@ -31,7 +31,7 @@ export default class Grid extends Container {
         const { reelModel, pool, ticker } = config;
         this._reelModel = reelModel;
 
-        const { symbolHeight, symbolWidth, rows, columns, padding } = reelModel;
+        const { symbolHeight, symbolWidth, rows, columns, padding, minSpinTime } = reelModel;
 
         const mask = new Graphics();
         mask.rect(0, 0, symbolWidth * columns, symbolHeight * rows);
@@ -41,13 +41,14 @@ export default class Grid extends Container {
 
         for (let col = 0; col < columns; col++) {
             const reel = new Reel({
-                pool,
+                pool: pool,
                 definition: reelModel.reelDefinitions[col],
-                rows,
-                symbolHeight,
+                rows: rows,
+                symbolHeight: symbolHeight,
                 symbolWidht: symbolWidth,
-                padding,
-                ticker,
+                padding: padding,
+                ticker: ticker,
+                minSpinTime: minSpinTime,
             });
             reel.x = col * symbolWidth;
             this.addChild(reel);
