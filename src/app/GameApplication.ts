@@ -35,8 +35,6 @@ export default class GameApplication {
         this.container.style.top = '50%';
         this.container.style.left = '50%';
         this.container.style.transform = 'translate(-50%, -50%)';
-        this.container.style.justifyContent = 'center';
-        this.container.style.alignItems = 'center';
         this.container.style.zIndex = '1';
 
         this.mainScreen = new Application();

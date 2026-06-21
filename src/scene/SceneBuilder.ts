@@ -104,6 +104,31 @@ export class SceneBuilder {
         } else {
             sceneObject = type ? new type() : new Container();
         }
+        const { x, y } = SceneBuilder._calculatePositions(data, parent);
+        sceneObject.x = x;
+        sceneObject.y = y;
+
+        sceneObject.width = data.width ?? sceneObject.width;
+        sceneObject.height = data.height ?? sceneObject.height;
+
+        sceneObject.scale.x *= data.scaleX ?? 1;
+        sceneObject.scale.y *= data.scaleY ?? 1;
+
+        sceneObject.alpha = data.alpha ?? 1;
+        sceneObject.visible = data.visible ?? true;
+        sceneObject.rotation = (data.rotation ?? 0) * (Math.PI / 180);
+
+        const { x: pivotX, y: pivotY } = SceneBuilder._calculatePivots(data, sceneObject);
+        sceneObject.pivot.x = pivotX;
+        sceneObject.pivot.y = pivotY;
+
+        return sceneObject;
+    }
+
+    private static _calculatePositions(
+        data: SceneData,
+        parent: Container,
+    ): { x: number; y: number } {
         let x = 0;
         let y = 0;
 
@@ -118,28 +143,29 @@ export class SceneBuilder {
                       ? parent.height
                       : 0;
         }
-        sceneObject.x = x + (data.x ?? 0);
-        sceneObject.y = y + (data.y ?? 0);
+        return {
+            x: x + (data.x ?? 0),
+            y: y + (data.y ?? 0),
+        };
+    }
 
-        sceneObject.width = data.width ?? sceneObject.width;
-        sceneObject.height = data.height ?? sceneObject.height;
-
-        sceneObject.scale.x *= data.scaleX ?? 1;
-        sceneObject.scale.y *= data.scaleY ?? 1;
-
-        sceneObject.alpha = data.alpha ?? 1;
-        sceneObject.visible = data.visible ?? true;
-        sceneObject.rotation = (data.rotation ?? 0) * (Math.PI / 180);
-
-        sceneObject.pivot.x =
-            data?.pivotX === 0 ? sceneObject.width / 2 : data?.pivotX === 1 ? sceneObject.width : 0;
-        sceneObject.pivot.y =
-            data?.pivotY === 0
-                ? sceneObject.height / 2
-                : data?.pivotY === 1
-                  ? sceneObject.height
-                  : 0;
-
-        return sceneObject;
+    private static _calculatePivots(
+        data: SceneData,
+        sceneObject: Container,
+    ): { x: number; y: number } {
+        return {
+            x:
+                data?.pivotX === 0
+                    ? sceneObject.width / 2
+                    : data?.pivotX === 1
+                      ? sceneObject.width
+                      : 0,
+            y:
+                data?.pivotY === 0
+                    ? sceneObject.height / 2
+                    : data?.pivotY === 1
+                      ? sceneObject.height
+                      : 0,
+        };
     }
 }
