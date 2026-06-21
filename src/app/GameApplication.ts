@@ -61,18 +61,14 @@ export default class GameApplication {
         this.onResize();
     }
 
-    /**
-     * Stage resize method
-     * @private
-     */
     protected onResize(): void {
         if (!this.mainScreen.renderer) return;
-        const scaleX: number = window.innerWidth / this.config.baseWidth;
-        const scaleY: number = window.innerHeight / this.config.baseHeight;
+        const scaleX: number = window.innerWidth / this.config.baseWidth!;
+        const scaleY: number = window.innerHeight / this.config.baseHeight!;
         this.mainScreen.stage.scale.set(scaleX, scaleY);
         this.mainScreen.renderer.resize(
-            scaleX * this.config.baseWidth,
-            scaleY * this.config.baseHeight,
+            scaleX * this.config.baseWidth!,
+            scaleY * this.config.baseHeight!,
         );
     }
 }

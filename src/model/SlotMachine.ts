@@ -1,6 +1,6 @@
 import { EventEmitter } from 'pixi.js';
-import { State } from './States';
-import { GameResult } from './service/GameResult';
+import { State } from '../States';
+import { GameResult } from '../service/GameResult';
 
 export const StateChanged = 'onStateChanged';
 

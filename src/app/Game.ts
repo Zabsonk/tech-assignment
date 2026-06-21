@@ -2,7 +2,7 @@ import { AssetsManager } from '../service/AssetsManager';
 import { SceneBuilder } from '../service/scene/SceneBuilder';
 import MainScene, { SpinButtonClicked } from '../MainScene';
 import GameApplication, { type GameApplicationConfig } from './GameApplication';
-import SlotMachine, { StateChanged } from '../SlotMachine';
+import SlotMachine, { StateChanged } from '../model/SlotMachine';
 import ReelModel from '../model/ReelModel';
 import SymbolsFactory from '../factories/SymbolsFactory';
 import DummyGameService, { GameMode } from '../service/GameService';
@@ -54,7 +54,7 @@ export default class Game extends GameApplication {
         this._slotMachine.currentState = State.Spin_Start;
     }
 
-    private async _onStateChanged(state: State): Promise<void> {
+    private _onStateChanged(state: State): void {
         switch (state) {
             case State.Spin_Start:
                 this._mainScene.spinStart();

@@ -38,26 +38,4 @@ export class AssetsManager {
         }
         return texture;
     }
-
-    static has(alias: string): boolean {
-        return Assets.get(alias) !== undefined;
-    }
-
-    static getSymbol(
-        name: 'high1' | 'high2' | 'high3' | 'low1' | 'low2' | 'low3' | 'low4',
-    ): Texture {
-        return AssetsManager.get(name);
-    }
-
-    static getSpinButton(state: 'normal' | 'hover' | 'down' | 'over' | 'disabled'): Texture {
-        return AssetsManager.get(`spin_btn_${state}`);
-    }
-
-    static get background(): Texture {
-        return AssetsManager.get('background');
-    }
-
-    static get reelsBase(): Texture {
-        return AssetsManager.get('reels_base');
-    }
 }
