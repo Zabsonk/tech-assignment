@@ -55,12 +55,12 @@ export default class Reel extends Container {
         this._strip = new Container();
         this.addChild(this._strip);
 
-        // rows + 2: 1 hidden above, rows visible, 1 hidden below
         for (let i = 0; i < this._rows + padding; i++) {
             const type = this._nextType();
             const symbol = this._pool.getSymbol(type);
             symbol.symbolId = type;
-            symbol.y = (i - 1) * this._symbolHeight;
+            symbol.x = this._symbolWidth / 2;
+            symbol.y = (i - 1) * this._symbolHeight + this._symbolHeight / 2;
             this._strip.addChild(symbol);
             this._slots.push({ symbol, type });
         }
@@ -73,6 +73,21 @@ export default class Reel extends Container {
         const type = this._definition[this._defIndex % this._definition.length];
         this._defIndex++;
         return type;
+    }
+
+    public detachSymbolAt(row: number): GridSymbol {
+        const symbol = this._slots[row + 1].symbol;
+        this._strip.removeChild(symbol);
+        return symbol;
+    }
+
+    public attachSymbolAt(row: number, symbol: GridSymbol): void {
+        this._slots[row + 1].symbol = symbol;
+        symbol.x = this._symbolWidth / 2;
+        symbol.y = row * this._symbolHeight + this._symbolHeight / 2;
+        symbol.scale.set(1);
+        symbol.alpha = 1;
+        this._strip.addChild(symbol);
     }
 
     public spin(): void {
@@ -143,7 +158,8 @@ export default class Reel extends Container {
         }
 
         for (let i = 0; i < this._slots.length; i++) {
-            this._slots[i].symbol.y = (i - 1) * this._symbolHeight + this._scrollY;
+            this._slots[i].symbol.y =
+                (i - 1) * this._symbolHeight + this._scrollY + this._symbolHeight / 2;
         }
     }
 
@@ -155,6 +171,7 @@ export default class Reel extends Container {
         const type = this._nextType();
         const symbol = this._pool.getSymbol(type);
         symbol.symbolId = type;
+        symbol.x = this._symbolWidth / 2;
         this._strip.addChildAt(symbol, 0);
         this._slots.unshift({ symbol, type });
 
@@ -176,7 +193,8 @@ export default class Reel extends Container {
         this._stopQueueIdx = 0;
 
         for (let i = 0; i < this._slots.length; i++) {
-            this._slots[i].symbol.y = (i - 1) * this._symbolHeight;
+            this._slots[i].symbol.x = this._symbolWidth / 2;
+            this._slots[i].symbol.y = (i - 1) * this._symbolHeight + this._symbolHeight / 2;
         }
 
         this._ticker.remove(this._update, this);

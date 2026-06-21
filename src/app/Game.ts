@@ -52,20 +52,26 @@ export default class Game extends GameApplication {
         switch (state) {
             case State.Spin_Start:
                 this._mainScene.spinStart();
+                this._slotMachine.gameResult = null;
                 this._getGameResult();
-                //if (result.win) this._mainScene.showWin(result.win);
-                //this._mainScene.enableSpin();
-                // this._slotMachine.currentState = State.Idle;
                 break;
             case State.Spin_Stop:
-                this._mainScene.spinStop(this._slotMachine.gameResult.stopData).then(() => {
+                this._mainScene.spinStop(this._slotMachine.gameResult!.stopData).then(() => {
                     this.onReelsStoped();
                 });
                 break;
             case State.Win:
-                const result = this._slotMachine.gameResult;
-                const { win, winsPositions } = result;
-                this._mainScene.showWin(win);
+                this._mainScene
+                    .showWin(
+                        this._slotMachine.gameResult!.win!,
+                        this._slotMachine.gameResult!.winsPositions!,
+                    )
+                    .then(() => {
+                        this._onWinShowed();
+                    });
+                break;
+            case State.Idle:
+                this._mainScene.enableSpin();
                 break;
         }
     }
@@ -77,11 +83,17 @@ export default class Game extends GameApplication {
     }
 
     private onReelsStoped(): void {
-        const result = this._slotMachine.gameResult;
+        const result = this._slotMachine.gameResult!;
         const { win, winsPositions } = result;
 
         if (win && winsPositions?.length) {
             this._slotMachine.currentState = State.Win;
+        } else {
+            this._slotMachine.currentState = State.Idle;
         }
+    }
+
+    private _onWinShowed(): void {
+        this._slotMachine.currentState = State.Idle;
     }
 }

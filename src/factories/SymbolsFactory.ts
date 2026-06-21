@@ -35,56 +35,52 @@ export default class SymbolsFactory {
     }
 
     private _create(type: Symbols, config: SymbolFactoryConfig): GridSymbol {
-        const { textureName, width, height } = config[type];
-        const symbol = new GridSymbol({ textureName });
-        symbol.width = width;
-        symbol.height = height;
-        return symbol;
+        return new GridSymbol({ textureName: config[type].textureName });
     }
 
     protected getConfigs(): SymbolFactoryConfig {
-        const { rows, columns, padding } = this._reelModel;
+        const { rows, columns, padding, symbolHeight, symbolWidth } = this._reelModel;
         return {
             [Symbols.High1]: {
                 textureName: 'high1',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
             [Symbols.High2]: {
                 textureName: 'high2',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
             [Symbols.High3]: {
                 textureName: 'high3',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
             [Symbols.Low1]: {
                 textureName: 'low1',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
             [Symbols.Low2]: {
                 textureName: 'low2',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
             [Symbols.Low3]: {
                 textureName: 'low3',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
             [Symbols.Low4]: {
                 textureName: 'low4',
-                width: 200,
-                height: 200,
+                width: symbolWidth,
+                height: symbolHeight,
                 count: (rows + padding) * columns,
             },
         };

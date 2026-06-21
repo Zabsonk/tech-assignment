@@ -5,7 +5,7 @@ export default class ReelModel {
     public readonly columns: number = 5;
     public readonly padding: number = 2;
     public readonly symbolWidth: number = 200;
-    public readonly symbolHeight: number = 200;
+    public readonly symbolHeight: number = 190;
 
     public readonly minSpinTime = 2000;
     public readonly reelDefinitions: Symbols[][] = [

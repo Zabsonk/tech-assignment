@@ -1,5 +1,6 @@
 import { gsap } from 'gsap';
 import { CanvasTextOptions, Container, Text, Ticker } from 'pixi.js';
+import { SymbolPositionAndType } from './service/GameResult';
 import { Symbols } from './service/GameService';
 import { SceneBuilder } from './service/scene/SceneBuilder';
 import Button, { ButtonClicked, ButtonConfig } from './views/Button';
@@ -56,6 +57,7 @@ export default class MainScene extends Container {
     }
 
     public spinStart(): void {
+        this._grid.hideWinAnimation();
         this._grid.spin();
         this._spinButton.disabled = true;
 
@@ -71,16 +73,15 @@ export default class MainScene extends Container {
         this._spinButton.disabled = false;
     }
 
-    public showWin(amount: number): void {
+    public async showWin(amount: number, winsPositions: SymbolPositionAndType[]): Promise<void> {
         this._totalWin.text = amount;
         this._totalWin.visible = true;
         this._totalWin.scale.set(0);
-        gsap.to(this._totalWin.scale, {
-            x: 1,
-            y: 1,
-            duration: 0.6,
-            ease: 'back.out(2)',
-        });
+
+        await Promise.all([
+            this._grid.showWinAnimation(winsPositions),
+            gsap.to(this._totalWin.scale, { x: 1, y: 1, duration: 0.6, ease: 'back.out(2)' }),
+        ]);
     }
 
     private _onSpinButtonClicked(): void {

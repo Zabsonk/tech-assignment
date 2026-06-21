@@ -5,7 +5,7 @@ import { GameResult } from './service/GameResult';
 export const StateChanged = 'onStateChanged';
 
 export default class SlotMachine extends EventEmitter {
-    public gameResult: GameResult;
+    public gameResult: GameResult | null = null;
 
     private _currentState: State = State.Init;
     private _previousState: State = State.Init;

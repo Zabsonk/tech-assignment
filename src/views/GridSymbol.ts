@@ -16,6 +16,7 @@ export default class GridSymbol extends Container {
 
         this._sprite = new Sprite(AssetsManager.get(textureName));
         this.addChild(this._sprite);
+        this.pivot.set(this._sprite.width / 2, this._sprite.height / 2);
     }
 
     public reset(): void {}

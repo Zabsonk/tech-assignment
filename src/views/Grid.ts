@@ -1,7 +1,10 @@
+import { gsap } from 'gsap';
 import { Container, Graphics, Ticker } from 'pixi.js';
+import { SymbolPositionAndType } from '../service/GameResult';
+import { Symbols } from '../service/GameService';
 import ReelModel from '../model/ReelModel';
 import SymbolsPool from '../SymbolsPool';
-import { Symbols } from '../service/GameService';
+import GridSymbol from './GridSymbol';
 import Reel from './Reel';
 
 export interface GridConfig {
@@ -10,12 +13,23 @@ export interface GridConfig {
     ticker: Ticker;
 }
 
+interface DetachedEntry {
+    col: number;
+    row: number;
+    symbol: GridSymbol;
+}
+
 export default class Grid extends Container {
     private _reels: Reel[] = [];
+    private _reelModel: ReelModel;
+    private _overlay: Graphics;
+    private _winLayer: Container;
+    private _detached: DetachedEntry[] = [];
 
     constructor(config: GridConfig) {
         super();
         const { reelModel, pool, ticker } = config;
+        this._reelModel = reelModel;
 
         const { symbolHeight, symbolWidth, rows, columns, padding } = reelModel;
 
@@ -25,20 +39,30 @@ export default class Grid extends Container {
         this.addChild(mask);
         this.mask = mask;
 
-        for (let col = 0; col < reelModel.columns; col++) {
+        for (let col = 0; col < columns; col++) {
             const reel = new Reel({
                 pool,
                 definition: reelModel.reelDefinitions[col],
-                rows: reelModel.rows,
-                symbolHeight: symbolHeight,
+                rows,
+                symbolHeight,
                 symbolWidht: symbolWidth,
-                padding: padding,
+                padding,
                 ticker,
             });
-            reel.x = col * reelModel.symbolWidth;
+            reel.x = col * symbolWidth;
             this.addChild(reel);
             this._reels.push(reel);
         }
+
+        this._overlay = new Graphics();
+        this._overlay.rect(0, 0, symbolWidth * columns, symbolHeight * rows);
+        this._overlay.fill({ color: 0x000000, alpha: 0.65 });
+        this._overlay.alpha = 0;
+        this._overlay.visible = false;
+        this.addChild(this._overlay);
+
+        this._winLayer = new Container();
+        this.addChild(this._winLayer);
     }
 
     public spin(): void {
@@ -49,7 +73,57 @@ export default class Grid extends Container {
         return Promise.all(this._reels.map((reel, i) => reel.stop(symbols[i]))).then(() => {});
     }
 
-    // public update(dt: number): void {
-    //     this._reels.forEach(reel => reel.update(dt));
-    // }
+    public async showWinAnimation(positions: SymbolPositionAndType[]): Promise<void> {
+        const { symbolWidth, symbolHeight } = this._reelModel;
+        const pivotX = symbolWidth / 2;
+        const pivotY = symbolHeight / 2;
+
+        this._overlay.visible = true;
+        gsap.to(this._overlay, { alpha: 1, duration: 0.3 });
+
+        const promises = positions.map(({ x: col, y: row }) => {
+            const symbol = this._reels[col].detachSymbolAt(row);
+
+            symbol.x = col * symbolWidth + pivotX;
+            symbol.y = row * symbolHeight + pivotY;
+            symbol.scale.set(0);
+            this._winLayer.addChild(symbol);
+            this._detached.push({ col, row, symbol });
+
+            return new Promise<void>(resolve => {
+                gsap.to(symbol.scale, {
+                    x: 1.25,
+                    y: 1.25,
+                    duration: 0.6,
+                    ease: 'back.out(2)',
+                    onComplete: () => {
+                        gsap.to(symbol.scale, {
+                            x: 1,
+                            y: 1,
+                            duration: 0.45,
+                            ease: 'sine.inOut',
+                            yoyo: true,
+                            repeat: 2,
+                            onComplete: resolve,
+                        });
+                    },
+                });
+            });
+        });
+
+        await Promise.all(promises);
+    }
+
+    public hideWinAnimation(): void {
+        gsap.killTweensOf(this._overlay);
+        this._overlay.alpha = 0;
+        this._overlay.visible = false;
+
+        for (const { col, row, symbol } of this._detached) {
+            gsap.killTweensOf(symbol.scale);
+            this._winLayer.removeChild(symbol);
+            this._reels[col].attachSymbolAt(row, symbol);
+        }
+        this._detached = [];
+    }
 }
