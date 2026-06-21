@@ -1,4 +1,6 @@
+import { gsap } from 'gsap';
 import { CanvasTextOptions, Container, Text, Ticker } from 'pixi.js';
+import { Symbols } from './service/GameService';
 import { SceneBuilder } from './service/scene/SceneBuilder';
 import Button, { ButtonClicked, ButtonConfig } from './views/Button';
 import Grid from './views/Grid';
@@ -59,6 +61,26 @@ export default class MainScene extends Container {
 
         this._totalWin.visible = false;
         this._totalWin.text = 0;
+    }
+
+    public spinStop(symbols: Symbols[][]): Promise<void> {
+        return this._grid.stop(symbols);
+    }
+
+    public enableSpin(): void {
+        this._spinButton.disabled = false;
+    }
+
+    public showWin(amount: number): void {
+        this._totalWin.text = amount;
+        this._totalWin.visible = true;
+        this._totalWin.scale.set(0);
+        gsap.to(this._totalWin.scale, {
+            x: 1,
+            y: 1,
+            duration: 0.6,
+            ease: 'back.out(2)',
+        });
     }
 
     private _onSpinButtonClicked(): void {

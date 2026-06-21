@@ -5,10 +5,12 @@ import GameApplication, { type GameApplicationConfig } from './GameApplication';
 import SlotMachine, { StateChanged } from '../SlotMachine';
 import ReelModel from '../model/ReelModel';
 import SymbolsFactory from '../factories/SymbolsFactory';
+import DummyGameService from '../service/GameService';
 import { State } from '../States';
 
 export default class Game extends GameApplication {
     private _slotMachine: SlotMachine = new SlotMachine();
+    private _gameService = new DummyGameService();
     private _mainScene: MainScene;
 
     constructor(config: Partial<GameApplicationConfig>) {
@@ -46,11 +48,40 @@ export default class Game extends GameApplication {
         this._slotMachine.currentState = State.Spin_Start;
     }
 
-    private _onStateChanged(state: State): void {
+    private async _onStateChanged(state: State): Promise<void> {
         switch (state) {
             case State.Spin_Start:
                 this._mainScene.spinStart();
+                this._getGameResult();
+                //if (result.win) this._mainScene.showWin(result.win);
+                //this._mainScene.enableSpin();
+                // this._slotMachine.currentState = State.Idle;
                 break;
+            case State.Spin_Stop:
+                this._mainScene.spinStop(this._slotMachine.gameResult.stopData).then(() => {
+                    this.onReelsStoped();
+                });
+                break;
+            case State.Win:
+                const result = this._slotMachine.gameResult;
+                const { win, winsPositions } = result;
+                this._mainScene.showWin(win);
+                break;
+        }
+    }
+
+    private async _getGameResult(): Promise<void> {
+        const result = await this._gameService.fetchResult();
+        this._slotMachine.gameResult = result;
+        this._slotMachine.currentState = State.Spin_Stop;
+    }
+
+    private onReelsStoped(): void {
+        const result = this._slotMachine.gameResult;
+        const { win, winsPositions } = result;
+
+        if (win && winsPositions?.length) {
+            this._slotMachine.currentState = State.Win;
         }
     }
 }

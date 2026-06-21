@@ -4,7 +4,7 @@ import SymbolsPool from '../SymbolsPool';
 import GridSymbol from './GridSymbol';
 
 const SPIN_SPEED = 30;
-const DECEL_TICKS = 30;
+const MINIMUM_SPIN_TIME = 2000; // ms — reel spins at least this long before stopping
 
 export interface ReelConfig {
     pool: SymbolsPool;
@@ -31,9 +31,16 @@ export default class Reel extends Container {
     private _scrollY = 0;
     private _spinning = false;
     private _stopping = false;
-    private _stopTimer = 0;
-    private _stopTarget: Symbols[] = [];
     private _stopResolve?: () => void;
+
+    private _spinStartTime = 0;
+    private _pendingStopSymbols: Symbols[] | null = null;
+
+    private _stopQueue: Symbols[] = [];
+    private _stopQueueIdx = 0;
+    private _stopAdvances = 0;
+    private _decelTicks = 0;
+    private _stopTimer = 0;
 
     constructor(config: ReelConfig) {
         super();
@@ -60,6 +67,9 @@ export default class Reel extends Container {
     }
 
     private _nextType(): Symbols {
+        if (this._stopping && this._stopQueueIdx < this._stopQueue.length) {
+            return this._stopQueue[this._stopQueueIdx++];
+        }
         const type = this._definition[this._defIndex % this._definition.length];
         this._defIndex++;
         return type;
@@ -69,36 +79,59 @@ export default class Reel extends Container {
         this._spinning = true;
         this._stopping = false;
         this._scrollY = 0;
+        this._stopQueue = [];
+        this._stopQueueIdx = 0;
+        this._pendingStopSymbols = null;
+        this._spinStartTime = Date.now();
         this._ticker.add(this._update, this);
     }
 
     public stop(symbols: Symbols[]): Promise<void> {
-        this._stopTarget = symbols;
-        this._stopping = true;
-        this._stopTimer = 0;
         return new Promise(resolve => {
             this._stopResolve = resolve;
+            this._pendingStopSymbols = symbols;
         });
+    }
+
+    private _startDecel(symbols: Symbols[]): void {
+        // Reversed so that after rows+1 advances they land: S1@row0, S2@row1, ...
+        this._stopQueue = [...symbols].reverse();
+        this._stopQueueIdx = 0;
+        this._stopAdvances = 0;
+        this._stopping = true;
+        this._stopTimer = 0;
+        // Distance to scroll so scrollY=0 after exactly rows+1 advances
+        const stopDistance = (this._rows + 1) * this._symbolHeight - this._scrollY;
+        // With sqrt easing: total_distance = (2/3) * SPIN_SPEED * decelTicks
+        this._decelTicks = (3 * stopDistance) / (2 * SPIN_SPEED);
     }
 
     private _update(ticker: Ticker): void {
         if (!this._spinning) return;
 
         const dt = ticker.deltaTime;
-        let speed = SPIN_SPEED * dt;
+
+        if (!this._stopping && this._pendingStopSymbols) {
+            if (Date.now() - this._spinStartTime >= MINIMUM_SPIN_TIME) {
+                this._startDecel(this._pendingStopSymbols);
+                this._pendingStopSymbols = null;
+            }
+        }
 
         if (this._stopping) {
             this._stopTimer += dt;
-            const t = Math.min(this._stopTimer / DECEL_TICKS, 1);
-            speed *= 1 - t * t;
+            const t = Math.min(this._stopTimer / this._decelTicks, 1);
+            const speed = SPIN_SPEED * Math.sqrt(Math.max(0, 1 - t)) * dt;
 
             if (t >= 1) {
                 this._snap();
                 return;
             }
-        }
 
-        this._scroll(speed);
+            this._scroll(speed);
+        } else {
+            this._scroll(SPIN_SPEED * dt);
+        }
     }
 
     private _scroll(px: number): void {
@@ -124,42 +157,28 @@ export default class Reel extends Container {
         symbol.symbolId = type;
         this._strip.addChildAt(symbol, 0);
         this._slots.unshift({ symbol, type });
+
+        if (this._stopping) {
+            this._stopAdvances++;
+        }
     }
 
     private _snap(): void {
+        // Natural decel may fall just short of the final advance — complete it if needed
+        while (this._stopAdvances < this._rows + 1) {
+            this._advance();
+        }
+
         this._spinning = false;
         this._stopping = false;
-
-        for (const { symbol, type } of this._slots) {
-            this._pool.returnSymbol(type, symbol);
-            this._strip.removeChild(symbol);
-        }
-        this._slots = [];
-
-        const aboveType = this._nextType();
-        const above = this._pool.getSymbol(aboveType);
-        above.symbolId = aboveType;
-        above.y = -this._symbolHeight;
-        this._strip.addChild(above);
-        this._slots.push({ symbol: above, type: aboveType });
-
-        for (let i = 0; i < this._rows; i++) {
-            const type = this._stopTarget[i];
-            const symbol = this._pool.getSymbol(type);
-            symbol.symbolId = type;
-            symbol.y = i * this._symbolHeight;
-            this._strip.addChild(symbol);
-            this._slots.push({ symbol, type });
-        }
-
-        const belowType = this._nextType();
-        const below = this._pool.getSymbol(belowType);
-        below.symbolId = belowType;
-        below.y = this._rows * this._symbolHeight;
-        this._strip.addChild(below);
-        this._slots.push({ symbol: below, type: belowType });
-
         this._scrollY = 0;
+        this._stopQueue = [];
+        this._stopQueueIdx = 0;
+
+        for (let i = 0; i < this._slots.length; i++) {
+            this._slots[i].symbol.y = (i - 1) * this._symbolHeight;
+        }
+
         this._ticker.remove(this._update, this);
         this._stopResolve?.();
         this._stopResolve = undefined;
