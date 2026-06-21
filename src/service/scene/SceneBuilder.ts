@@ -1,11 +1,11 @@
-import { Container, Sprite } from 'pixi.js';
+import { Container, Sprite, Text } from 'pixi.js';
 import { type SceneConfig, type SceneData } from './SceneData';
-import { AssetsManager } from '../service/AssetsManager';
+import { AssetsManager } from '../AssetsManager';
 
 const SCENE_FILE = 'scene.json';
 const LAYOUTS_MARKER = 'layouts/';
 
-const layoutFiles = import.meta.glob('../layouts/**/scene.json', {
+const layoutFiles = import.meta.glob('../../layouts/**/scene.json', {
     import: 'default',
 }) as Record<string, () => Promise<SceneConfig>>;
 
@@ -62,18 +62,18 @@ export class SceneBuilder {
         }
     }
 
-    public static build<TType extends Container = Container>(
+    public static build<TType extends Container = Container, TConfig = undefined>(
         sceneName: string,
         parentContainer: Container,
-        type?: new () => TType,
-    ): TType | undefined {
+        type?: new (...args: any[]) => Container,
+        config?: TConfig,
+    ): TType {
         const sceneData = SceneBuilder.get(sceneName);
         if (!sceneData) {
-            console.warn(`Scene "${sceneName}" not found.`);
-            return undefined;
+            throw new Error(`[SceneBuilder] scene "${sceneName}" not found`);
         }
 
-        const sceneObject = SceneBuilder._buildNode(sceneData, parentContainer, type);
+        const sceneObject = SceneBuilder._buildNode(sceneData, parentContainer, type, config);
         parentContainer.addChild(sceneObject);
         return sceneObject as TType;
     }
@@ -93,16 +93,17 @@ export class SceneBuilder {
         return afterMarker.slice(0, -(SCENE_FILE.length + 1));
     }
 
-    private static _buildNode(
+    private static _buildNode<TConfig>(
         data: SceneData,
         parent: Container,
-        type?: new () => Container,
+        type?: new (config?: TConfig) => Container,
+        config?: TConfig,
     ): Container {
         let sceneObject: Container;
         if (data.asset) {
             sceneObject = new Sprite(AssetsManager.get(data.asset));
         } else {
-            sceneObject = type ? new type() : new Container();
+            sceneObject = type ? new type(config ?? undefined) : new Container();
         }
         const { x, y } = SceneBuilder._calculatePositions(data, parent);
         sceneObject.x = x;
@@ -121,6 +122,11 @@ export class SceneBuilder {
         const { x: pivotX, y: pivotY } = SceneBuilder._calculatePivots(data, sceneObject);
         sceneObject.pivot.x = pivotX;
         sceneObject.pivot.y = pivotY;
+
+        if (sceneObject instanceof Text) {
+            sceneObject.anchor.x = data.anchorX ?? 0;
+            sceneObject.anchor.y = data.anchorY ?? 0;
+        }
 
         return sceneObject;
     }

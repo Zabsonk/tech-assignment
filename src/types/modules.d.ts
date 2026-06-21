@@ -1,4 +1,4 @@
-import { SceneConfig } from '../scene/SceneData';
+import { SceneConfig } from '../service/scene/SceneData';
 
 // Parcel glob import: import * as x from '../layouts/**/scene.json'
 // Result is a map of { filePath: parsedJson }

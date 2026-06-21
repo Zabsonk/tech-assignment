@@ -6,6 +6,9 @@ export interface SceneConfig {
     pivotX?: ObjectPos;
     pivotY?: ObjectPos;
 
+    anchorX?: number;
+    anchorY?: number;
+
     // Positioning based on parent container dimensions. x/y will be added to the calculated position.
     centeriseX?: ObjectPos;
     centeriseY?: ObjectPos;
