@@ -5,4 +5,5 @@ export enum Symbols {
     Low1 = 'l1',
     Low2 = 'l2',
     Low3 = 'l3',
+    Low4 = 'l4',
 }

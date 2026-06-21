@@ -81,6 +81,12 @@ export default class SymbolsFactory {
                 height: 200,
                 count: (rows + padding) * columns,
             },
+            [Symbols.Low4]: {
+                textureName: 'low4',
+                width: 200,
+                height: 200,
+                count: (rows + padding) * columns,
+            },
         };
     }
 }
