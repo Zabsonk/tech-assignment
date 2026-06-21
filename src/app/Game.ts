@@ -24,6 +24,8 @@ export default class Game extends GameApplication {
 
         await SceneBuilder.init();
 
+        this._gameService.initGame();
+
         this._slotMachine.on(StateChanged, this._onStateChanged, this);
 
         const reelModel = new ReelModel();
@@ -41,12 +43,6 @@ export default class Game extends GameApplication {
         this.mainScreen.stage.addChild(scene);
 
         this._slotMachine.currentState = State.Idle;
-
-        document.querySelectorAll<HTMLInputElement>('input[name="gm"]').forEach(radio => {
-            radio.addEventListener('change', () => {
-                this._gameService.setMode(radio.value as GameMode);
-            });
-        });
     }
 
     private _onSpinButtonClicked(): void {

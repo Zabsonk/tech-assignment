@@ -1,13 +1,7 @@
 import { Container, Sprite, Text } from 'pixi.js';
 import { type SceneConfig, type SceneData } from './SceneData';
 import { AssetsManager } from '../AssetsManager';
-
-const SCENE_FILE = 'scene.json';
-const LAYOUTS_MARKER = 'layouts/';
-
-const layoutFiles = import.meta.glob('../../layouts/**/scene.json', {
-    import: 'default',
-}) as Record<string, () => Promise<SceneConfig>>;
+import assetsConfig from '../../../config/assetsConfig.json';
 
 export class SceneBuilder {
     private static _scenes = new Map<string, SceneData>();
@@ -17,48 +11,22 @@ export class SceneBuilder {
     public static async init(): Promise<void> {
         SceneBuilder._scenes.clear();
 
-        const fullPathToId = new Map<string, string>();
-
         const loaded = await Promise.all(
-            Object.entries(layoutFiles).map(async ([filePath, load]) => ({
-                filePath,
-                config: await load(),
-            })),
+            assetsConfig.layouts.map(async ({ name, src }) => {
+                const response = await fetch(src);
+                const config: SceneConfig = await response.json();
+                return { name, config };
+            }),
         );
 
-        for (const { filePath, config } of loaded) {
-            const fullPath = SceneBuilder._toFullPath(filePath);
-            if (fullPath === null) continue;
-
-            const id = fullPath.split('/').at(-1)!;
-
-            fullPathToId.set(fullPath, id);
-
-            const node: SceneData = {
+        for (const { name, config } of loaded) {
+            SceneBuilder._scenes.set(name, {
                 ...config,
-                id,
-                path: id,
+                id: name,
+                path: name,
                 parent: null,
                 children: new Map(),
-            };
-
-            SceneBuilder._scenes.set(id, node);
-        }
-
-        for (const [fullPath, id] of fullPathToId) {
-            const parts = fullPath.split('/');
-            if (parts.length < 2) continue;
-
-            const parentFullPath = parts.slice(0, -1).join('/');
-            const parentId = fullPathToId.get(parentFullPath);
-            if (!parentId) continue;
-
-            const node = SceneBuilder._scenes.get(id);
-            const parent = SceneBuilder._scenes.get(parentId);
-            if (node && parent) {
-                node.parent = parent;
-                parent.children.set(id, node);
-            }
+            });
         }
     }
 
@@ -80,17 +48,6 @@ export class SceneBuilder {
 
     public static get(path: string): SceneData | undefined {
         return SceneBuilder._scenes.get(path);
-    }
-
-    private static _toFullPath(filePath: string): string | null {
-        const normalized = filePath.replace(/\\/g, '/');
-        const markerIdx = normalized.indexOf(LAYOUTS_MARKER);
-        if (markerIdx === -1) return null;
-
-        const afterMarker = normalized.slice(markerIdx + LAYOUTS_MARKER.length);
-        if (!afterMarker.endsWith('/' + SCENE_FILE)) return null;
-
-        return afterMarker.slice(0, -(SCENE_FILE.length + 1));
     }
 
     private static _buildNode<TConfig>(

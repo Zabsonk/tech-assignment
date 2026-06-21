@@ -34,7 +34,13 @@ export default class DummyGameService implements IService<GameResult> {
         this._mode = mode;
     }
 
-    public initGame(): void {}
+    public initGame(): void {
+        document.querySelectorAll<HTMLInputElement>('input[name="gm"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                this.setMode(radio.value as GameMode);
+            });
+        });
+    }
 
     public fetchResult(): Promise<GameResult> {
         if (this._mode === 'random') {

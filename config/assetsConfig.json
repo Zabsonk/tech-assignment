@@ -1,0 +1,26 @@
+{
+    "assets": [
+        { "name": "background", "src": "img/background.jpg" },
+        { "name": "high1", "src": "img/high1.png" },
+        { "name": "high2", "src": "img/high2.png" },
+        { "name": "high3", "src": "img/high3.png" },
+        { "name": "low1", "src": "img/low1.png" },
+        { "name": "low2", "src": "img/low2.png" },
+        { "name": "low3", "src": "img/low3.png" },
+        { "name": "low4", "src": "img/low4.png" },
+        { "name": "reels_base", "src": "img/reels_base.png" },
+        { "name": "spin_btn_disabled", "src": "img/spin_btn_disabled.png" },
+        { "name": "spin_btn_down", "src": "img/spin_btn_down.png" },
+        { "name": "spin_btn_hover", "src": "img/spin_btn_hover.png" },
+        { "name": "spin_btn_normal", "src": "img/spin_btn_normal.png" },
+        { "name": "spin_btn_over", "src": "img/spin_btn_over.png" }
+    ],
+    "layouts": [
+        { "name": "mainScene", "src": "layouts/mainScene/scene.json" },
+        { "name": "background", "src": "layouts/mainScene/background/scene.json" },
+        { "name": "grid", "src": "layouts/mainScene/grid/scene.json" },
+        { "name": "reelsBackground", "src": "layouts/mainScene/reelsBackground/scene.json" },
+        { "name": "spinButton", "src": "layouts/mainScene/spinButton/scene.json" },
+        { "name": "totalWin", "src": "layouts/mainScene/totalWin/scene.json" }
+    ]
+}

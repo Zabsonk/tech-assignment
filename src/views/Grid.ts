@@ -93,7 +93,6 @@ export default class Grid extends Container {
 
             symbol.x = col * symbolWidth + pivotX;
             symbol.y = row * symbolHeight + pivotY;
-            symbol.scale.set(0);
             this._winLayer.addChild(symbol);
             this._detached.push({ col, row, symbol });
 
