@@ -22,8 +22,11 @@ interface DetachedEntry {
 export default class Grid extends Container {
     private _reels: Reel[] = [];
     private _reelModel: ReelModel;
+
     private _overlay: Graphics;
     private _winLayer: Container;
+    private _spinLayer: Container;
+
     private _detached: DetachedEntry[] = [];
 
     constructor(config: GridConfig) {
@@ -33,11 +36,14 @@ export default class Grid extends Container {
 
         const { symbolHeight, symbolWidth, rows, columns, padding, minSpinTime } = reelModel;
 
+        this._spinLayer = new Container();
+        this.addChild(this._spinLayer);
+
         const mask = new Graphics();
         mask.rect(0, 0, symbolWidth * columns, symbolHeight * rows);
         mask.fill(0xffffff);
         this.addChild(mask);
-        this.mask = mask;
+        this._spinLayer.mask = mask;
 
         for (let col = 0; col < columns; col++) {
             const reel = new Reel({
@@ -51,7 +57,7 @@ export default class Grid extends Container {
                 minSpinTime: minSpinTime,
             });
             reel.x = col * symbolWidth;
-            this.addChild(reel);
+            this._spinLayer.addChild(reel);
             this._reels.push(reel);
         }
 
