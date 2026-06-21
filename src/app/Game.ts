@@ -5,7 +5,7 @@ import GameApplication, { type GameApplicationConfig } from './GameApplication';
 import SlotMachine, { StateChanged } from '../model/SlotMachine';
 import ReelModel from '../model/ReelModel';
 import SymbolsFactory from '../factories/SymbolsFactory';
-import DummyGameService, { GameMode } from '../service/GameService';
+import DummyGameService from '../service/GameService';
 import { State } from '../States';
 
 export default class Game extends GameApplication {
