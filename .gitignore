@@ -7,6 +7,4 @@ node_modules
 dist
 .vscode
 
-package-lock.json
-package.json
 vite.config.ts
